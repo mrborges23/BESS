@@ -23,7 +23,7 @@ The control file is where you indicate the location of the data, the model to us
 |```sample_frequency```| The sample frequency determines how often the chain is sampled.|
 
 
-## The site frequency spectrum 
+## The sampled site frequency spectrum 
 This software uses the frequency spectrum of two variants to produce inferences. Let us imagine that we have a determining number of sequences aligned for a given number of individuals *S*. For each genomic position, the number of times the variant *A* is present among the sampled individuals can be counted. The distribution of these frequencies is the site frequency spectrum. This frequency can vary between 0 (when none of the individuals have the variant *A*) and *S* (when all the individuals have the *A* variant). A similar reasoning can be made for variant *B*.
 
 If the individuals are diploid then we count chromosomes, so the sample size will be *2S*; and the same follows for other ploidies. These software only needs a vector of counts separated by spaces. Let us consider the following example:
@@ -32,4 +32,13 @@ If the individuals are diploid then we count chromosomes, so the sample size wil
 ````
 From this count vector, the  immediately assumes that a total of 38 genomic positions were observed: 10 of which where the variant *A* was not observed among the individuals (or chromosomes), and 9 where all individuals had variant *A*. As the vector has 5 elements, it assumes that four chromosomes were counted, i.e., there are 4 haploid individuals in the sample. 
 
-## Running 
+## Compiling and Running BEST
+
+Now that the control file and the sampled site frequency spectrum are created, let us compile and runs BEST.
+
+
+## The output file
+
+## Cite us!
+
+In preparation

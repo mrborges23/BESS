@@ -63,6 +63,7 @@ int main(int argc, char * argv[]) {
   ReadControlFile(str_control_file,model,str_sfile);
   
 
+  /*
   // simulates a sample SFS
   int N    = 1000;
   double muij = 0.0001;
@@ -74,8 +75,8 @@ int main(int argc, char * argv[]) {
 
   counts = s_Simulator(muij,muji,phij,N,S);
 
- std::ofstream sfile(str_sfile);
- for (int i=0; i<(M+1); ++i){
+  std::ofstream sfile(str_sfile);
+  for (int i=0; i<(M+1); ++i){
     sfile << counts[i] << " ";
   }
   sfile.close();
@@ -85,21 +86,25 @@ int main(int argc, char * argv[]) {
 
 
   ReadControlFile(str_control_file,model,str_sfile);
-  std::cout << "mu1:" << mu << "\n";
 
   mu   = muji*muij*(1.0+pow(phij,N-1))/(muji+muij*pow(phij,N-1)) ;
+  
+  */
+
+  //mu = m_mu;
+  //std::cout << "mu1:" << mu << "\n";
 
   // runs the neutral moran model
   if (model=="N") {
     std::cout << "  Parameters were succefully read.\n\n";
-    std::cout << model << " | " << iterations << " | " << n_chains << " | " << sample_freq << " | "  << mu << " | " << alpha_N << " | " << beta_N << " | " << alpha_phij << " | " << beta_phij << "\n\n";
+    std::cout << model << " | " << iterations << " | " << n_chains << " | " << sample_freq << " | "  << mu*10000 << " | " << alpha_N << " | " << beta_N << " | " << alpha_phij << " | " << beta_phij << "\n\n";
     n_MCMC(str_sfile);
-        std::cout << "\n  The log and chekpoint files have been written.\n\n";
+    std::cout << "\n  The log and chekpoint files have been written.\n\n";
 
   // runs the moran model with selection
   } else if (model == "S") {
     std::cout << "  Parameters were succefully read.\n\n";
-    std::cout << model << " | " << iterations << " | " << n_chains << " | " << sample_freq << " | "  << mu << " | " << alpha_N << " | " << beta_N << " | " << alpha_phij << " | " << beta_phij << "\n\n";
+    std::cout << model << " | " << iterations << " | " << n_chains << " | " << sample_freq << " | "  << mu*10000 << " | " << alpha_N << " | " << beta_N << " | " << alpha_phij << " | " << beta_phij << "\n\n";
     s_MCMC(str_sfile);
     std::cout << "\n  The log and chekpoint files have been written.\n\n";
 
@@ -126,7 +131,7 @@ void ReadControlFile(const std::string str_control_file, std::string& model, std
 
   //reads the control file 
   std::string word;
-  double m_mu, v_mu, m_N, v_N, m_phij, v_phij;
+  double m_N, v_N, m_phij, v_phij;
   std::ifstream cfile(str_control_file);
   if (!cfile.is_open()) {
     std::cerr << "  Unable to open " << str_control_file << ".\n\n";
@@ -143,6 +148,8 @@ void ReadControlFile(const std::string str_control_file, std::string& model, std
   beta_phij  = m_phij/v_phij;
 
   std::cout << "\nm_mu=" << m_mu << "\n";
+  mu = rnorm(m_mu,v_mu);
+  std::cout << "\nm_mu=" << mu << "\n";
 
   // reads the sample site frequency spectrum
   std::ifstream sfile(str_sfile);
@@ -201,12 +208,12 @@ double s_Likelihood(double& muij, double& muji, double& phij, int& N) {
   double sum_nsfs = nsfs[0] + nsfs[N];
 
   // polymorphic states {nj}
-  double mu = N*muij*muji;
+  double mus = N*muij*muji;
   double phij_0 = 1.0/phij;
 
   for (int n = 1; n<N; ++n){
     phij_0 *= phij;
-    nsfs[n] = mu*phij_0*(n*phij+N-n)/(n*(N-n));
+    nsfs[n] = mus*phij_0*(n*phij+N-n)/(n*(N-n));
     sum_nsfs += nsfs[n];
   }
 
@@ -341,7 +348,6 @@ void s_MetropolisHastings_muji(double& muij, double& muji, double& phij, int& N)
   
   // Normal proposal
   double muji1 = rnorm(muji,tunning_muji);
-  mu           = rnorm(m_mu,v_mu);
   double muij1 = muji1*mu/( muji1*(1.0+pow(phij,N-1))-pow(phij,N-1)*mu );  
   //std::cout << "muji: " << muji << " / miji1: " << muji1 << " : " << tunning_muji << "," << na_muji << "\n";
 
@@ -488,9 +494,9 @@ void s_MCMC(std::string& str_ifile){
     ckfile << "gen\tmuji\tmuij\tphij\tN\tna_muji\tn_phij\tna_N\ttunning_muji\ttunning_phij\ttunning_N\n";
 
     // sampling the initial parameters
-    double muji = runif(mu*0.5,2.0*mu);
-    int N = round(rexp(0.001) + counts.size()-1);
-    //N       = 1000;
+    double muji = rnorm(m_mu,v_mu);
+    int N       = round(rexp(0.001) + counts.size()-1);
+    //N         = 1000;
     double phij = 1.0+1.0/(2.0*N); // rexp(N);
     //phij = 1.00001;
 
@@ -513,6 +519,7 @@ void s_MCMC(std::string& str_ifile){
     std::cout << 0 << "\t" << lnL << "\t" << muji << "\t" << muij << "\t" << phij << "\t" << N << "\n";
 
     for (int i=1; i<(iterations+1); ++i){
+      mu           = rnorm(m_mu,v_mu);
 
       // Metropolis-Hastings algorithm
       s_MetropolisHastings_muji(muij,muji,phij,N);
@@ -586,7 +593,6 @@ void n_MetropolisHastings_muji(double& muij, double& muji, int& N){
 
   // Normal proposal
   double muji1 = rnorm(muji,tunning_muji);
-  mu           = rnorm(m_mu,v_mu);
   double muij1 = mu*muji1/(2.0*muji1-mu);
 
   if ( (muji1<0.0) || (muji1>1.0) ) {
@@ -657,8 +663,8 @@ void n_MCMC(std::string& str_ifile){
     ckfile << "gen\tmuji\tmuij\tN\tna_muji\tna_N\ttunning_muji\ttunning_N\n";
 
     // sampling the initial parameters
-    double muji = runif(mu*0.5,2.0*mu);
-    int N = round(rexp(0.001) + counts.size()-1);
+    double muji = rnorm(m_mu,v_mu);
+    int N       = round(rexp(0.001) + counts.size()-1);
     //N       = 1000;
 
     double muij = mu*muji/(2.0*muji-mu);
@@ -677,6 +683,7 @@ void n_MCMC(std::string& str_ifile){
     std::cout << 0 << "\t" << lnL << "\t" << muji << "\t" << muij << "\t" << N << "\n";
 
     for (int i=1; i<(iterations+1); ++i){
+      mu           = rnorm(m_mu,v_mu);
 
       // Metropolis-Hastings algorithm
       n_MetropolisHastings_muji(muij,muji,N);
@@ -751,12 +758,12 @@ std::vector<int> s_Simulator(double& muij, double& muji, double& phij, int& N, i
   double sum_nsfs = nsfs[0] + nsfs[N];
 
   // polymorphic states {nj}
-  double mu = N*muij*muji;
+  double mus = N*muij*muji;
   double phij_0 = 1.0/phij;
 
   for (int n = 1; n<N; ++n){
     phij_0 *= phij;
-    nsfs[n] = mu*phij_0*(n*phij+N-n)/(n*(N-n));
+    nsfs[n] = mus*phij_0*(n*phij+N-n)/(n*(N-n));
     sum_nsfs += nsfs[n];
   }
 

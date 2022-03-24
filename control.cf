@@ -1,0 +1,17 @@
+model S
+site_frequency_spectrum_file sfs.txt
+
+mutation_rate_mean 0.00015
+mutation_rate_variance 0.0000015
+
+ploidy 2
+
+population_size_dgamma_prior_mean 1
+population_size_dgamma_prior_variance 1000
+
+fitness_coefficient_gamma_prior_mean 1
+fitness_coefficient_gamma_prior_variance 1000
+
+number_generations 1000000
+number_chains 2
+sample_frequency 10

@@ -1,8 +1,8 @@
 model S
 site_frequency_spectrum_file sfs.txt
 
-mutation_rate_mean 0.00015
-mutation_rate_variance 0.0000015
+mutation_rate_mean 0.0001
+mutation_rate_variance 0.000001
 
 ploidy 2
 

@@ -13,7 +13,7 @@
 
 //global variables
 int M, iterations, n_chains, sample_freq, na_muji, na_N, na_phij, ploidy;
-double mu, m_mu, v_mu, alpha_N, beta_N, alpha_phij, beta_phij, lnL, tunning_muji, tunning_N, tunning_phij;
+double mu, m_N, v_N, m_phij, v_phij, lnL, tunning_muji, tunning_N, tunning_phij;
 std::vector<int> counts;
 
 
@@ -63,14 +63,14 @@ int main(int argc, char * argv[]) {
   ReadControlFile(str_control_file,model,str_sfile);
   
 
-  /*
-  // simulates a sample SFS
-  int N    = 1000;
-  double muij = 0.0001;
+  
+  // simUlates a sample SFS
+  int N    = 10000;
+  double muij = 0.0002;
   double muji = 0.0001;
-  double phij = 1.0000;
+  double phij = 1.001;
   mu   = muji*muij*(1.0+pow(phij,N-1))/(muji+muij*pow(phij,N-1)) ;
-  M       = 100;
+  M       = 200;
   int S   = 1000000;
 
   counts = s_Simulator(muij,muji,phij,N,S);
@@ -89,7 +89,7 @@ int main(int argc, char * argv[]) {
 
   mu   = muji*muij*(1.0+pow(phij,N-1))/(muji+muij*pow(phij,N-1)) ;
   
-  */
+  
 
   //mu = m_mu;
   //std::cout << "mu1:" << mu << "\n";
@@ -97,14 +97,14 @@ int main(int argc, char * argv[]) {
   // runs the neutral moran model
   if (model=="N") {
     std::cout << "  Parameters were succefully read.\n\n";
-    std::cout << model << " | " << iterations << " | " << n_chains << " | " << sample_freq << " | "  << mu*10000 << " | " << alpha_N << " | " << beta_N << " | " << alpha_phij << " | " << beta_phij << "\n\n";
+    std::cout << model << " | " << iterations << " | " << n_chains << " | " << sample_freq << " | "  << mu*10000 << " | " << m_N << " | " << v_N << " | " << m_phij << " | " << v_phij << "\n\n";
     n_MCMC(str_sfile);
     std::cout << "\n  The log and chekpoint files have been written.\n\n";
 
   // runs the moran model with selection
   } else if (model == "S") {
     std::cout << "  Parameters were succefully read.\n\n";
-    std::cout << model << " | " << iterations << " | " << n_chains << " | " << sample_freq << " | "  << mu*10000 << " | " << alpha_N << " | " << beta_N << " | " << alpha_phij << " | " << beta_phij << "\n\n";
+    std::cout << model << " | " << iterations << " | " << n_chains << " | " << sample_freq << " | "  << mu*10000 << " | " << m_N << " | " << v_N << " | " << m_phij << " | " << v_phij << "\n\n";
     s_MCMC(str_sfile);
     std::cout << "\n  The log and chekpoint files have been written.\n\n";
 
@@ -131,25 +131,19 @@ void ReadControlFile(const std::string str_control_file, std::string& model, std
 
   //reads the control file 
   std::string word;
-  double m_N, v_N, m_phij, v_phij;
+
   std::ifstream cfile(str_control_file);
   if (!cfile.is_open()) {
     std::cerr << "  Unable to open " << str_control_file << ".\n\n";
   }
 
   // updates parameters
-  cfile >> word >> model >> word >> str_sfile >> word >> m_mu >> word >> v_mu >> word >> ploidy >> word >> m_N >> word >> v_N >> word >> m_phij >> word >> v_phij >> word >> iterations >> word >> n_chains >> word >> sample_freq; 
+  cfile >> word >> model >> word >> str_sfile >> word >> mu >> word >> m_N >> word >> v_N >> word >> m_phij >> word >> v_phij >> word >> iterations >> word >> n_chains >> word >> sample_freq; 
   cfile.close();
 
-  // updates prior parameters
-  alpha_N    = m_N*m_N/v_N;
-  beta_N     = m_N/v_N;
-  alpha_phij = m_phij*m_phij/v_phij;
-  beta_phij  = m_phij/v_phij;
-
-  std::cout << "\nm_mu=" << m_mu << "\n";
-  mu = rnorm(m_mu,v_mu);
-  std::cout << "\nm_mu=" << mu << "\n";
+  // getting the denominators of normal priors
+  v_N    = 2*pow(v_N,2);
+  v_phij = 2*pow(v_phij,2);
 
   // reads the sample site frequency spectrum
   std::ifstream sfile(str_sfile);
@@ -194,6 +188,45 @@ void ReadControlFile(const std::string str_control_file, std::string& model, std
   The ln likelihood
 
 */
+
+double s_Likelihood_Approximation(double& muij, double& muji, double& phij, int& N){
+
+  int K=10000;
+  double f,choose;
+  
+  double B[K+1][M+1];
+  for (int m=0; m<(M+1); m++){
+    choose = exp(lbinomial(M,m));
+    for (int k=0; k<(K+1); ++k){
+      f = k*1.0/K;
+      B[k][m]= choose*pow(f,m)*pow(f,1.0*M-m);
+      //B[k,m]= choose*pow(f,m)*pow(f,1.0*M-m);
+    }
+  }
+
+  std::vector<double> nsfs(K+1);
+  double sum_nsfs = 0.0;
+  nsfs[0] = muji;
+  nsfs[K] = muij*pow(phij,N-1);
+  sum_nsfs += nsfs[0] + nsfs[K];
+  for (int k=1; k<K; ++k){
+    f = k*1.0/K;
+    nsfs[k] = muij*muji*pow(phij,f*N-1)*(f*phij+1-f)/(f*(1-f)) ;
+    sum_nsfs += nsfs[k];  
+  }
+
+  std::vector<double> esfs(M+1,0.0);
+  double lnL=0.0;
+  for (int m=0; m<(M+1); m++){
+    for (int k=0; k<(K+1); ++k){
+      esfs[m] += B[k][m]*nsfs[k];
+    }
+    lnL += counts[m]*(log(esfs[m])-log(sum_nsfs));
+  }
+
+
+
+}
 
 double s_Likelihood(double& muij, double& muji, double& phij, int& N) {
   
@@ -407,7 +440,7 @@ void s_MetropolisHastings_phij(double& muij, double& muji, double& phij, int& N)
   
   // Accept-reject step
   // proposal ratio = 1 
-  double acceptance_prob = exp(lnL1-lnL+(alpha_phij-1.0)*log(phij1)-beta_phij*phij1-(alpha_phij-1.0)*log(phij)+beta_phij*phij );
+  double acceptance_prob = exp( lnL1 -lnL -pow(phij1-m_phij,2)/v_phij +pow(phij-m_phij,2)/v_phij );
   if (runif(0,1) < acceptance_prob) {
     phij     = phij1;
     lnL      = lnL1; 
@@ -456,7 +489,7 @@ void s_MetropolisHastings_N(double& muij, double& muji, double& phij, int& N){
 
   // Accept-reject step
   // proposal ratio = 1 
-  double acceptance_prob = exp(lnL1-lnL+(alpha_N-1.0)*log(N1)-beta_N*N1-(alpha_N-1.0)*log(N)+beta_N*N);
+  double acceptance_prob = exp( lnL1 -lnL -pow(N1-m_N,2)/v_N +pow(N-m_N,2)/v_N );
   if (runif(0,1) < acceptance_prob) {
     N     = N1;
     lnL   = lnL1; 
@@ -494,8 +527,8 @@ void s_MCMC(std::string& str_ifile){
     ckfile << "gen\tmuji\tmuij\tphij\tN\tna_muji\tn_phij\tna_N\ttunning_muji\ttunning_phij\ttunning_N\n";
 
     // sampling the initial parameters
-    double muji = rnorm(m_mu,v_mu);
-    int N       = round(rexp(0.001) + counts.size()-1);
+    double muji = rnorm(mu,0.01*mu);
+    int N       = round(rexp(mu) + counts.size()-1);
     //N         = 1000;
     double phij = 1.0+1.0/(2.0*N); // rexp(N);
     //phij = 1.00001;
@@ -519,7 +552,6 @@ void s_MCMC(std::string& str_ifile){
     std::cout << 0 << "\t" << lnL << "\t" << muji << "\t" << muij << "\t" << phij << "\t" << N << "\n";
 
     for (int i=1; i<(iterations+1); ++i){
-      mu           = rnorm(m_mu,v_mu);
 
       // Metropolis-Hastings algorithm
       s_MetropolisHastings_muji(muij,muji,phij,N);
@@ -633,7 +665,7 @@ void n_MetropolisHastings_N(double& muij, double& muji, int& N){
 
   // Accept-reject step
   // proposal ratio = 1 
-  double acceptance_prob = exp(lnL1-lnL);
+  double acceptance_prob = exp( lnL1 -lnL -pow(N1-m_N,2)/v_N +pow(N-m_N,2)/v_N );
   //std::cout << "\nap: "<< acceptance_prob << "\n" ;
   if (runif(0,1) < acceptance_prob) {
     N     = N1;
@@ -663,7 +695,7 @@ void n_MCMC(std::string& str_ifile){
     ckfile << "gen\tmuji\tmuij\tN\tna_muji\tna_N\ttunning_muji\ttunning_N\n";
 
     // sampling the initial parameters
-    double muji = rnorm(m_mu,v_mu);
+    double muji = rnorm(mu,mu*0.01);
     int N       = round(rexp(0.001) + counts.size()-1);
     //N       = 1000;
 
@@ -683,7 +715,6 @@ void n_MCMC(std::string& str_ifile){
     std::cout << 0 << "\t" << lnL << "\t" << muji << "\t" << muij << "\t" << N << "\n";
 
     for (int i=1; i<(iterations+1); ++i){
-      mu           = rnorm(m_mu,v_mu);
 
       // Metropolis-Hastings algorithm
       n_MetropolisHastings_muji(muij,muji,N);

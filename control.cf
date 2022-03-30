@@ -11,4 +11,4 @@ fitness_coefficient_prior_variance 1000
 
 number_generations 1000000
 number_chains 2
-sample_frequency 10
+sample_frequency 100

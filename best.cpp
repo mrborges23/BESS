@@ -15,7 +15,8 @@
 int M, iterations, n_chains, sample_freq, na_muji, na_N, na_phij, ploidy;
 double mu, m_N, v_N, m_phij, v_phij, lnL, tunning_muji, tunning_N, tunning_phij;
 std::vector<int> counts;
-
+std::vector<double> B;
+int K = 10000;
 
 // g++ mcmc_neutral.cpp -o mcmc -O3
 // ./mcmc sfs.txt 0.00015 100000 2 10 
@@ -28,6 +29,7 @@ void             s_SimulatorEvenM          (double& muij, double& muji, double& 
 
 // functions for the Moran model with mutation biases and selection
 double           s_Likelihood              (double& muij, double& muji, double& phij, int& N);
+double           s_Likelihood_Approximation(double& muij, double& muji, double& phij, int& N);
 double           s_logLikelihoodOddM       (int& N, const std::vector<double>& nsfs, double& sum_nsfs);
 double           s_logLikelihoodEvenM      (int& N, const std::vector<double>& nsfs, double& sum_nsfs);
 void             s_MetropolisHastings_muji (double& muij, double& muji, double& phij, int& N);
@@ -62,17 +64,16 @@ int main(int argc, char * argv[]) {
   std::vector<int> counts;
   ReadControlFile(str_control_file,model,str_sfile);
   
-
-  
   // simUlates a sample SFS
   int N    = 10000;
-  double muij = 0.0002;
-  double muji = 0.0001;
-  double phij = 1.001;
+  double muij = 0.00002;
+  double muji = 0.00001;
+  double phij = 1.000;
+ /*
   mu   = muji*muij*(1.0+pow(phij,N-1))/(muji+muij*pow(phij,N-1)) ;
   M       = 200;
   int S   = 1000000;
-
+ 
   counts = s_Simulator(muij,muji,phij,N,S);
 
   std::ofstream sfile(str_sfile);
@@ -80,13 +81,18 @@ int main(int argc, char * argv[]) {
     sfile << counts[i] << " ";
   }
   sfile.close();
-  double lll = s_Likelihood(muij,muji,phij,N);
-  std::cout << "lnL:" << lll << "\n";
+  //double lll = s_Likelihood(muij,muji,phij,N);
+  //std::cout << "lnL:" << lll << "\n";
 
 
-
+  counts.clear();
   ReadControlFile(str_control_file,model,str_sfile);
 
+  
+  //int N       = 10000;
+  //double muij = 0.0002;
+  //double muji = 0.0001;
+  //double phij = 1.0001;*/
   mu   = muji*muij*(1.0+pow(phij,N-1))/(muji+muij*pow(phij,N-1)) ;
   
   
@@ -160,7 +166,7 @@ void ReadControlFile(const std::string str_control_file, std::string& model, std
 
   // gets the sample size
   M = counts.size()-1;
-
+  //std::cout << "sample size1: " << M << "\n\n";
 }
 
 
@@ -191,45 +197,60 @@ void ReadControlFile(const std::string str_control_file, std::string& model, std
 
 double s_Likelihood_Approximation(double& muij, double& muji, double& phij, int& N){
 
-  int K=10000;
-  double f,choose;
-  
-  double B[K+1][M+1];
-  for (int m=0; m<(M+1); m++){
-    choose = exp(lbinomial(M,m));
-    for (int k=0; k<(K+1); ++k){
-      f = k*1.0/K;
-      B[k][m]= choose*pow(f,m)*pow(f,1.0*M-m);
-      //B[k,m]= choose*pow(f,m)*pow(f,1.0*M-m);
-    }
-  }
 
+  // calculating the stationary distribution over 0:1 at 1/K intervals
   std::vector<double> nsfs(K+1);
-  double sum_nsfs = 0.0;
-  nsfs[0] = muji;
-  nsfs[K] = muij*pow(phij,N-1);
-  sum_nsfs += nsfs[0] + nsfs[K];
+  
+  // fixed states
+  nsfs[0]   = muji;
+  nsfs[K]   = muij*pow(phij,N-1);
+  double sum_nsfs = nsfs[0] + nsfs[K];
+
+  // polymorpic states
+  double f;
   for (int k=1; k<K; ++k){
     f = k*1.0/K;
     nsfs[k] = muij*muji*pow(phij,f*N-1)*(f*phij+1-f)/(f*(1-f)) ;
     sum_nsfs += nsfs[k];  
   }
 
+  double sum =0.0;
+  for (int k=0; k<(K+1); ++k){
+    //std::cout << "sd: " << nsfs[k]/sum_nsfs << "\n\n";
+    sum += nsfs[k]/sum_nsfs;
+  }
+  //std::cout << "sum: " << sum << "\n\n";
+
+
+  // calculating the empirical site frequency spectrum
   std::vector<double> esfs(M+1,0.0);
-  double lnL=0.0;
-  for (int m=0; m<(M+1); m++){
+
+  double lnLikelihood = 0.0;
+
+  for (int m=0; m<(M+1); ++m){
     for (int k=0; k<(K+1); ++k){
-      esfs[m] += B[k][m]*nsfs[k];
+      esfs[m] += B[m*(K+1)+k]*nsfs[k]/sum_nsfs;
+      //std::cout << " B: " << B[m*(K+1)+k] << "\n\n";
     }
-    lnL += counts[m]*(log(esfs[m])-log(sum_nsfs));
+    lnLikelihood += counts[m]*log(esfs[m]);
+    //std::cout << "esfs[" << m << "]: " << esfs[m] << " lnL: " << lnLikelihood << "\n\n";
   }
 
-
+  return lnLikelihood;
 
 }
 
 double s_Likelihood(double& muij, double& muji, double& phij, int& N) {
   
+
+  // choosing the Likelihood approximation:
+  // N > 9999
+
+  if (N > 9999) {
+    return  s_Likelihood_Approximation(muij, muji, phij, N) ;
+  }
+
+
   // computing the site frequency spectrum for a population of 
   // N individuals
   // {0j},{1j},...,{nj},...,{N-1j},{Nj}
@@ -243,6 +264,7 @@ double s_Likelihood(double& muij, double& muji, double& phij, int& N) {
   // polymorphic states {nj}
   double mus = N*muij*muji;
   double phij_0 = 1.0/phij;
+
 
   for (int n = 1; n<N; ++n){
     phij_0 *= phij;
@@ -384,7 +406,9 @@ void s_MetropolisHastings_muji(double& muij, double& muji, double& phij, int& N)
   double muij1 = muji1*mu/( muji1*(1.0+pow(phij,N-1))-pow(phij,N-1)*mu );  
   //std::cout << "muji: " << muji << " / miji1: " << muji1 << " : " << tunning_muji << "," << na_muji << "\n";
 
-  if ( (muji1<0.0) || (muji1>1.0) ) {
+
+
+  if ( (muji1< 0.0) || (muji1>1.0) || (muij1< 0.0) || (muij1>1.0)  ) {
     return; 
   }
   
@@ -512,6 +536,22 @@ void s_MetropolisHastings_N(double& muij, double& muji, double& phij, int& N){
 void s_MCMC(std::string& str_ifile){
 
   std::string str_ofile,str_ckfile;
+  
+  
+  // calculating the sampling probabilities for each m and n
+  double f,choose, value;
+
+  // Binomial approximation to the hypergeometric distribution here
+  for (int m=0; m<(M+1); m++){
+    choose = exp(lbinomial(M,m));
+    for (int k=0; k<(K+1); ++k){
+      f = k*1.0/K;
+      value = choose*pow(f,m)*pow(1-f,M-m);
+      B.push_back( value );
+      //std::cout << "binom f:" << f << " m:" << m  << " ():" << choose << " p:" << pow(f,m) <<" = " <<B[m*(K+1)+k] <<"\n";
+      //B[k,m]= choose*pow(f,m)*pow(f,1.0*M-m);
+    }
+  }
 
   // employing the mcmc independent n_chains
   for (int c=0; c<n_chains; ++c){
@@ -527,11 +567,9 @@ void s_MCMC(std::string& str_ifile){
     ckfile << "gen\tmuji\tmuij\tphij\tN\tna_muji\tn_phij\tna_N\ttunning_muji\ttunning_phij\ttunning_N\n";
 
     // sampling the initial parameters
-    double muji = rnorm(mu,0.01*mu);
-    int N       = round(rexp(mu) + counts.size()-1);
-    //N         = 1000;
+    double muji = rnorm(mu,0.2*mu);
+    int N       = round(rexp(0.01*mu) + counts.size()-1);
     double phij = 1.0+1.0/(2.0*N); // rexp(N);
-    //phij = 1.00001;
 
     double muij = muji*mu/( muji*(1.0+pow(phij,N-1))-pow(phij,N-1)*mu );  
     //std::cout << "rmuji: " << muji << "  rmuij: " << muij << "\n"; 
@@ -542,7 +580,7 @@ void s_MCMC(std::string& str_ifile){
     na_phij = 0; 
     na_N = 0;
     tunning_muji = mu;
-    tunning_phij = 1.0/N;
+    tunning_phij = 1.0-phij;
     tunning_N    = N;
 
     // initial likelihood
@@ -627,7 +665,7 @@ void n_MetropolisHastings_muji(double& muij, double& muji, int& N){
   double muji1 = rnorm(muji,tunning_muji);
   double muij1 = mu*muji1/(2.0*muji1-mu);
 
-  if ( (muji1<0.0) || (muji1>1.0) ) {
+  if (  (muji1< 0.0) || (muji1>1.0) || (muij1< 0.0) || (muij1>1.0)  ) {
     return; 
   }
   
@@ -695,10 +733,8 @@ void n_MCMC(std::string& str_ifile){
     ckfile << "gen\tmuji\tmuij\tN\tna_muji\tna_N\ttunning_muji\ttunning_N\n";
 
     // sampling the initial parameters
-    double muji = rnorm(mu,mu*0.01);
+    double muji = mu;
     int N       = round(rexp(0.001) + counts.size()-1);
-    //N       = 1000;
-
     double muij = mu*muji/(2.0*muji-mu);
 
     // setting the acceptance probabilitites and initial tunning
@@ -809,7 +845,7 @@ std::vector<int> s_Simulator(double& muij, double& muji, double& phij, int& N, i
   double factor = S/sum_nsfs;
   for (int m = 0; m<(M+1); ++m) {
     ssfs[m] = round(msfs[m]*factor);
-    std::cout << ssfs[m] << "\n";
+    //std::cout << ssfs[m] << "\n";
   }
 
   return ssfs;

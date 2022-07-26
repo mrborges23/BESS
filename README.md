@@ -1,13 +1,13 @@
-# BEST
+# BESS
 
-Bayesian Estimation of the Site frequency specTrum
+Bayesian Estimation of the Site frequency Spectrum
 
-This software estimates the site-frequency spectrum under a Moran model with biased and reversible mutations and selection using a Bayesian inference. 
+This software estimates the site-frequency spectrum under a Moran model with biased and reversible mutations and selection using Bayesian inference. 
  
 
 ## Version 
 
-0.1 (March 2021)
+0.1 (July 2021)
 
 
 ## Citation
@@ -15,16 +15,16 @@ This software estimates the site-frequency spectrum under a Moran model with bia
 In preparation
 
 
-## Downloading and compiling BEST
+## Downloading and compiling BESS
 
-First of all, we need to download all the necessary files to compile and run BEST; these files are in this GitHub repository. You can download these files manually or directly from the terminal:
+First of all, we need to download all the necessary files to compile and run BESS; these files are in this GitHub repository. You can download these files manually or directly from the terminal:
 
 
 ```
 git clone https://github.com/mrborges23/best.git best
 ```
 
-BEST is implemented in C++ and needs to be compiled; this step will produce an executable that can then be used to run BEST. We use the `g++` compiler, but others could be used instead:
+BESS is implemented in C++ and needs to be compiled; this step will produce an executable that can then be used to run BESS. We use the `g++` compiler, but others could be used instead:
 
 ```
 g++ best.cpp -o best -O3 -std=c++20
@@ -35,7 +35,7 @@ This step should have created an executable called `best` in your working direct
 
 ## Control file
 
-The control file includes all the necessary parameters to run BEST:
+The control file includes all the necessary parameters to run BESS:
 The control file is where you indicate the location of the data, the model to use, and specify the priors to use during Bayesian inference.
 
 
@@ -63,15 +63,15 @@ If the individuals are diploid then we count chromosomes, so the sample size wil
 From this count vector, the  immediately assumes that a total of 38 genomic positions were observed: 10 of which where the variant *A* was not observed among the individuals (or chromosomes), and 9 where all individuals had variant *A*. As the vector has 5 elements, it assumes that four chromosomes were counted, i.e., there are 4 haploid individuals in the sample. 
 
 
-## Running BEST
+## Running BESS
 
-To run BEST, simply place your sampled site frequecy spectrum and the control file in the folder where the BEST executable is. Then, open the terminal and run the executable `best` followed by the name of the control file:
+To run BESS, simply place your sampled site frequecy spectrum and the control file in the folder where the BESS executable is. Then, open the terminal and run the executable `best` followed by the name of the control file:
 
 ```
 ./best control.cf
 ```
 
-BEST imediatly prints out a short description of the data file. Confirm that this information conforms to your data. To make sure BEST is running, you should get the message `BEST has started!`. When the analyses terminate, you should get the message `BEST has finished!`. BEST periodically writes of the `output_file`.
+BESS imediatly prints out a short description of the data file. Confirm that this information conforms to your data. To make sure BESS is running, you should get the message `BESS has started!`. When the analyses terminate, you should get the message `BESS has finished!`. BESS periodically writes of the `output_file`.
 
 
 ## Output file
@@ -84,7 +84,7 @@ I hope not!
 
 ## Questions and bug reporting
 
-Please use **Issues** to report possible bugs, suggest enhancement features, or if you need help using BEST. If you have more theoretical or biological questions, you can directly contact Rui Borges (ruiborges23@gmail.com).
+Please use **Issues** to report possible bugs, suggest enhancement features, or if you need help using BESS. If you have more theoretical or biological questions, you can directly contact Rui Borges (ruiborges23@gmail.com).
 
 
 ## License

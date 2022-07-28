@@ -46,39 +46,24 @@ The control file includes all the necessary parameters to run BESS:
 
 The control file is where you indicate the location of the data, the model to use, and specify the priors to use during Bayesian inference.
 
-| Parameter | Description |
-
-|---|---|
-
-| ```model``` | ```S``` stands for the Moran model with reversible mutations and selection whereas ```N``` stands for the neutral Moran model. |
-
-| ```site_frequency_spectrum_file``` | The location of the sampled site frequency spectrum. |
-
-|```mutation_rate```| The mutation rate. We advise using a mutation rate estimated independently of any previous estimate of the effective population size (e.g., pedigree-based, etc.). The problem with using such mutation rates is that the inferences will be circular. Note that Best jointly estimates the effective population size. |
-
-|```population_size_prior_mean```| The prior mean of a normal distribution A good option for a uninformative gamma priors is setting the mean to ... and the variance to ... . The effective population size can only take integer values; we renormalize the normal distribution so that only positive integers are possible to be observed. |
-
-|```population_size_prior_variance```| The prior variance of a normal distribtuion. |
-
-|```fitness_coefficient_prior_mean```| The prior mean of the prior normal distribution. The fiftness coefficients can only take positive values; we renomalized the normal distribution so that it  are possible to be observed. |
-
-|```fitness_coefficient_prior_variance``` | The prior variance of the prior normal distribtuion. |
-
-|```number_generations```| The number of generations for which the analysis will be run.|
-
-|```number_chains```| The number of independent runs  starting from different parameter set. |
-
-|```sample_frequency```| The sample frequency determines how often the chain is sampled.|
-
-|```lower_bound```| The sample frequency determines how often the chain is sampled.|
-
+* ```model```: ```S``` stands for the Moran model with reversible mutations and selection whereas ```N``` stands for the neutral Moran model.
+* ```site_frequency_spectrum_file```: The location of the sampled site frequency spectrum.
+* ```mutation_rate```: The mutation rate. We advise using a mutation rate estimated independently of any previous estimate of the effective population size (e.g., pedigree-based, etc.). The problem with using such mutation rates is that the inferences will be circular. Note that Best jointly estimates the effective population size.
+* ```population_size_prior_mean```: The prior mean of a normal distribution A good option for a uninformative gamma priors is setting the mean to ... and the variance to ... . The effective population size can only take integer values; we renormalize the normal distribution so that only positive integers are possible to be observed.
+* ```population_size_prior_variance```: The prior variance of a normal distribtuion.
+* ```fitness_coefficient_prior_mean```: The prior mean of the prior normal distribution. The fiftness coefficients can only take positive values; we renomalized the normal distribution so that it  are possible to be observed.
+* ```fitness_coefficient_prior_variance```: The prior variance of the prior normal distribtuion.
+* ```number_generations```: The number of generations for which the analysis will be run.
+* ```number_chains```: The number of independent runs  starting from different parameter set.
+* ```sample_frequency```: The sample frequency determines how often the chain is sampled.
+* ```lower_bound```: The sample frequency determines how often the chain is sampled.
 
 
 ## The sampled site frequency spectrum 
 
-This software uses the frequency spectrum of two variants to produce inferences. Let us imagine that we have a determining number of sequences aligned for a given number of individuals *S*. For each genomic position, the number of times the variant *A* is present among the sampled individuals can be counted. The distribution of these frequencies is the site frequency spectrum. This frequency can vary between 0 (when none of the individuals have the variant *A*) and *S* (when all the individuals have the *A* variant). A similar argument can be made for variant *B*.
+This software uses the site frequency spectrum to infer the population parameters. But what is the site frequency spectrum? Let us imagine that we have *S* sequences for different individuals.  For each genomic position, the number of times the variant *A* is present among the sampled individuals can be counted. The distribution of these frequencies among the genomic position is the (sampled) site frequency spectrum. This frequency can vary between 0 (when none of the individuals have the variant *A*) and *S* (when all the individuals have the variant *A*).
 
-If the individuals are diploid, then we count chromosomes, so the sample size will be *2S*; and the same follows for other ploidies. This software only needs a vector of counts separated by spaces. Let us consider the following example:
+If the individuals are diploid, then we count chromosomes, so the sample size will be instead *2S*; and the same follows for other ploidies. BESS software requires a vector of counts separated by spaces, which location is given in the control file (```site_frequency_spectrum_file```). Let us consider the following example:
 
 ```
 
@@ -86,11 +71,11 @@ If the individuals are diploid, then we count chromosomes, so the sample size wi
 
 ````
 
-From this count vector, one immediately assumes that a total of 38 genomic positions were observed: 10 of which where the variant *A* was not observed among the individuals (or chromosomes), and 9 where all individuals had variant *A*. As the vector has 5 elements, it assumes that four chromosomes were counted, i.e., there are 4 haploid individuals in the sample. 
+From this count vector, one immediately knows that a total of 38 genomic positions were sequenced: in 10 of which the variant *A* was not observed, and in 9 all individuals had variant *A*. As the vector has 5 elements, it assumes that four individuals (or chomosomes for diploids and other ploidies) were counted, i.e., there are 4 haploid individuals in the sample. 
 
 ## Running BESS
 
-To run BESS, simply place your sampled site frequency spectrum and the control file in the folder where the BESS executable is. Then, open the terminal and run the executable `best` followed by the name of the control file:
+To run BESS, simply place your sampled site frequency spectrum and the control file together with the BESS executable. Then, open the terminal and run the executable `best` followed by the name of the control file:
 
 ```
 
@@ -98,29 +83,34 @@ To run BESS, simply place your sampled site frequency spectrum and the control f
 
 ```
 
-BESS immediately prints out a short description of the data file. Confirm that this information conforms to your data. To make sure BESS is running, you should get the message `BESS has started!`. When the analyses terminate, you should get the message `BESS has finished!`. BESS periodically writes to the `output_file`.
+BESS immediately prints out a short description of the data file. Please, confirm that this information conforms to your data. To make sure BESS is running, you should get the message `BESS has started!`. When the analyses finish, you should get the message `BESS has finished!`. BESS periodically writes to the `output_file`.
 
 ## Output file
 
-The output file (.log file) includes information on the estimated parameters. 
+The output file (```.log``` file) includes information on the estimated parameters. Each line is a sample from the posterior. Please make sure to exclude some of the initial samples from your estimates. These correspond to the burni phase, where the chain  
 
 ```
-gen    lnL    muji    muij    N
-100    -3.988e+07    8.97193e-09    5.7387e-09    9089
+gen    lnL             muji           muij           N
+100    -3.988e+07      8.97193e-09    5.7387e-09     9089
 200    -3.98104e+07    8.97649e-09    5.73683e-09    22303
 300    -3.97732e+07    8.97649e-09    5.73683e-09    40726
 ```
 
+An example:
+
 ## Compilation errors and how to solve them
 
-I hope not!
-
+So far, we have found none. But let us know if you are experiencing some issues and if so how did you solve them. 
 
 
 ## Questions and bug reporting
 
 Please use **Issues** to report possible bugs, suggest enhancement features, or if you need help using BESS. If you have more theoretical or biological questions, you can directly contact Rui Borges (ruiborges23@gmail.com).
 
+We noticed that some runs get stucked during the MCMC (this is noticeable because the parameters do not change at all; your trace plots would look like this:
+
+
+These are related to numerical issues that tend to hapen with site frequency spectrum from two or three individuals. We were able to solve these by re-runing BESS. 
 
 
 ## License

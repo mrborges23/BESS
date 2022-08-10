@@ -14,8 +14,7 @@ Bayesian estimation of the site-frequency spectrum under a Moran model with bias
 
 ## Citation
 
-In preparation
-
+*Title* Borges, Kotari, Bergman, Chase, Mugal and Kosiol Birxiv DOI XXX
 
 
 
@@ -86,7 +85,7 @@ BESS immediately prints out a short description of the data file. Please, confir
 
 ## Output file
 
-The output file (```.log``` file) includes information on the estimated parameters. Each line is a sample from the posterior.
+The output file (```.log``` file) includes information on the estimated parameters. Each line is a sample from the posterior and should be similar to:
 
 ```
 gen    lnL             muji           muij           N
@@ -95,7 +94,9 @@ gen    lnL             muji           muij           N
 300    -3.97732e+07    8.97649e-09    5.73683e-09    40726
 ```
 
-An example:
+In order to estimate the population parameters, wwe need first to check for convergence and mixing. You can read the log file using for example R. In R, you can produce the trace plots, in order to check whether the mcmc is converging and mixing properly. When this is observed, you can procede to estimate the parameter by calculating their mean or median.
+
+
 
 ## Compilation errors and how to solve them
 

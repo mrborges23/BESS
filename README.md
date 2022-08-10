@@ -59,21 +59,22 @@ The control file includes all the necessary parameters to run BESS: it is where 
 
 ## The sampled site frequency spectrum 
 
-This software uses the site frequency spectrum to infer several population parameters. But what is the site frequency spectrum? Let us imagine that we have *I* sequences (one per individual) of length *S* that at each position can only have the allele *A* or *B*.  If we count number of times the variant *A* is present among the sampled individuals for each genomic position, we determine the (sampled) site frequency spectrum. This frequency can vary between 0 (when none of the individuals have the variant *A*) and *S* (when all the individuals have the variant *A*).
-
-If the individuals are diploid, then we count chromosomes, so the sample size will be instead *2S*; and the same follows for other ploidies. BESS software requires a vector of counts separated by spaces, which location is given in the control file (```site_frequency_spectrum_file```). Let us consider the following example:
+This software uses the site frequency spectrum to infer several population parameters. But what is the site frequency spectrum? Let us imagine that we have sequenced *S* genomic positions from a population of *I* individuals. Each genomic positions can only have the allele *A* or *B*. If we count number of times the variant *A* is present among the sampled individuals for each genomic position. Such count can vary between 0 (when none of the individuals have the variant *A*) and *S* (when all the individuals have the variant *A*). The frequency (among the genomic positions) of the differente allelic counts (among the individuals) constitutes the (sampled) site frequency spectrum. An examle will carify this hedious sentence. Let us consider the following toy site-frequency spectrum:
 
 ```
 
 10 8 5 6 9
 
 ````
+We know immediately that a total of 38 genomic positions were sequenced (by summing all the counts): 10 of which the variant *A* was not observed, 9 of which all individuals had the variant *A*. As the vector has 5 elements, it tells us that four individuals were counted, i.e., there are 4 haploid individuals in the sample. We note that if the individuals are diploid, then we count chromosomes instead of individuals, so the sample size will be *2S*. The same rationalle follows for other ploidies. 
 
-From this count vector, one immediately knows that a total of 38 genomic positions were sequenced: in 10 of which the variant *A* was not observed, and in 9 all individuals had variant *A*. As the vector has 5 elements, it assumes that four individuals (or chomosomes for diploids and other ploidies) were counted, i.e., there are 4 haploid individuals in the sample. 
+BESS requires a vector of counts separated by spaces, which location is given in the control file (```site_frequency_spectrum_file```). 
+
+
 
 ## Running BESS
 
-To run BESS, simply place your sampled site frequency spectrum and the control file together with the BESS executable. Then, open the terminal and run the executable `bess` followed by the name of the control file:
+To run BESS, simply place your sampled site-frequency spectrum and the control file together with the BESS executable. Then, open the terminal and run the executable `bess` followed by the name of the control file:
 
 ```
 
@@ -85,7 +86,7 @@ BESS immediately prints out a short description of the data file. Please, confir
 
 ## Output file
 
-The output file (```.log``` file) includes information on the estimated parameters. Each line is a sample from the posterior. Please make sure to exclude some of the initial samples from your estimates. These correspond to the burni phase, where the chain  
+The output file (```.log``` file) includes information on the estimated parameters. Each line is a sample from the posterior.
 
 ```
 gen    lnL             muji           muij           N
@@ -98,20 +99,16 @@ An example:
 
 ## Compilation errors and how to solve them
 
-So far, we have found none. But let us know if you are experiencing some issues and if so how did you solve them. 
+So far, we have found none but let us know otherwise.
 
 
 ## Questions and bug reporting
 
 Please use **Issues** to report possible bugs, suggest enhancement features, or if you need help using BESS. If you have more theoretical or biological questions, you can directly contact Rui Borges (ruiborges23@gmail.com).
 
-We noticed that some runs get stucked during the MCMC (this is noticeable because the parameters do not change at all; your trace plots would look like this:
-
-
-These are related to numerical issues that tend to hapen with site frequency spectrum from two or three individuals. We were able to solve these by re-runing BESS. 
+We noticed that some runs get stucked during the MCMC (this is noticeable because the parameters do not change at all. These are related to numerical issues that tend to hapen when the site-frequency spectrum has few individuals (two or three individuals). We regret not having a facier solution to this problem, but in the situations that we encoutered, we were always able to work around this numerical issue by just re-runing BESS. 
 
 
 ## License
 
 This program is free software. You can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software. See the GNU General Public License (http://www.gnu.org/licenses/) for more details.
-![image](https://user-images.githubusercontent.com/30591620/183960272-b86680a5-24ec-41a2-95f9-c52850268c57.png)

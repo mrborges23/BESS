@@ -102,7 +102,7 @@ To estimate the population parameters, we need first to check the convergence an
 
 These are examples of well converged and mixed chains. To estimate each parameter, the burn-in phase, in which the parameters quickly change their values, should be first removed. Removing the first 10% generations would be enough to eliminate the burn-in phase for these runs, but thei t should be checked for each data set, as it may vary considerably. 
 
-Note: This data comes from a population of 11 Sumatra-Orang-Utans; as they are diploid, 23 the site-frequency has 23 entries. 
+Note: This data comes from a population of 11 Sumatra-Orang-Utans (PAB stands for *Pongo abelii*); as they are diploid, 23 the site-frequency has 23 entries. 
 
 ## Compilation errors and how to solve them
 

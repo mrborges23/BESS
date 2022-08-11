@@ -85,18 +85,20 @@ BESS immediately prints out a short description of the data file. Please, confir
 
 ## Output file
 
-The output file (```.log``` file) includes information on the estimated parameters. Each line is a sample from the posterior and should be similar to:
+The output file (```.log``` file) includes information on the estimated parameters. Each line is a sample from the posterior. You should obtain something similar to this excerpt:
 
 ```
-gen    lnL             muji           muij           N
-100    -3.988e+07      8.97193e-09    5.7387e-09     9089
-200    -3.98104e+07    8.97649e-09    5.73683e-09    22303
-300    -3.97732e+07    8.97649e-09    5.73683e-09    40726
+gen	  lnL	         muji	       muij	         sigmaj	       N
+100	  -7.52836e+06	 2.3684e-08	   2.64722e-08	 6.77759e-08   13710
+200	  -7.48412e+06	 2.38531e-08   2.62628e-08	 6.77759e-08   1015
+300	  -7.41649e+06	 2.41379e-08   2.5926e-08	 6.77759e-08   1015
+400	  -7.33793e+06	 2.44865e-08   2.55355e-08	 6.77759e-08   1015
+500	  -7.20977e+06	 2.51017e-08   2.48991e-08	 8.61609e-09   12724
 ```
 
 In order to estimate the population parameters, wwe need first to check for convergence and mixing. You can read the log file using for example R. In R, you can produce the trace plots, in order to check whether the mcmc is converging and mixing properly. When this is observed, you can procede to estimate the parameter by calculating their mean or median.
 
-
+![](https://github.com/mrborges23/BESS/blob/main/mcmc_plots.png)
 
 ## Compilation errors and how to solve them
 

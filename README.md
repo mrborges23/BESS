@@ -46,9 +46,9 @@ The control file includes all the necessary parameters to run BESS: it is where 
 * ```model```: ```S``` stands for the Moran model with reversible mutations and selection whereas ```N``` stands for the neutral Moran model.
 * ```site_frequency_spectrum_file```: The location of the sampled site frequency spectrum.
 * ```mutation_rate```: The mutation rate. We advise using a mutation rate estimated independently of any previous estimates of effective population size (e.g., pedigree-based, etc.). The problem with using effective-population-size estimated mutation rates, even if obtained from other software, is that BESS jointly estimates the effective population size, making the inferences circular.
-* ```population_size_prior_mean```: The prior mean of a normal distribution. We note that each new proposed effective population size during the mcmc is corrected so it cannot take negative or decimal numbers. 
+* ```population_size_prior_mean```: The prior mean of a normal distribution. We note that each new proposed effective population size during the MCMC is corrected so it cannot take negative or decimal numbers. 
 * ```population_size_prior_variance```: The prior variance of a normal distribtuion.
-* ```fitness_coefficient_prior_mean```: The prior mean of the prior normal distribution. As for the effective population size, the each newly proposed fitness value during the mcmc cannot take negative values.
+* ```fitness_coefficient_prior_mean```: The prior mean of the prior normal distribution. As for the effective population size, the each newly proposed fitness value during the MCMC cannot take negative values.
 * ```fitness_coefficient_prior_variance```: The prior variance of the prior normal distribtuion.
 * ```number_generations```: The number of generations for which the mcm cis intented to run.
 * ```number_chains```: The number of independent runs, which start from a different parameter set.
@@ -85,7 +85,7 @@ BESS immediately prints out a short description of the data file. Please, confir
 
 ## Output file
 
-The output file (```.log``` file) includes information on the estimated parameters. Each line is a sample from the posterior. You should obtain something similar to this excerpt:
+The output file (```.log``` file) includes information on the estimated parameters. Each line is a sample from the posterior. 
 
 ```
 gen	  lnL	         muji	       muij	         sigmaj	       N
@@ -96,9 +96,12 @@ gen	  lnL	         muji	       muij	         sigmaj	       N
 500	  -7.20977e+06	 2.51017e-08   2.48991e-08	 8.61609e-09   12724
 ```
 
-In order to estimate the population parameters, wwe need first to check for convergence and mixing. You can read the log file using for example R. In R, you can produce the trace plots, in order to check whether the mcmc is converging and mixing properly. When this is observed, you can procede to estimate the parameter by calculating their mean or median.
+To estimate the population parameters, we need first to check convergence and mixing of MCMC chains. In this GitHub repository you find a count and a control file that should produce output files which trce plots should be similar to the following ones:
 
 ![](https://github.com/mrborges23/BESS/blob/main/mcmc_plots.png)
+
+These are examples of well converged and mixed chains. To estimate each parameter, the burn-in phase, in which the parameteres quickly change their values, should be first removed. For these runs, removing the first 10% generations would be enough, but the burn-in phase should be checked for each data set, as it may vary considerably. 
+
 
 ## Compilation errors and how to solve them
 

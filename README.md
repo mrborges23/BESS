@@ -96,12 +96,13 @@ gen	  lnL	         muji	       muij	         sigmaj	       N
 500	  -7.20977e+06	 2.51017e-08   2.48991e-08	 8.61609e-09   12724
 ```
 
-To estimate the population parameters, we need first to check the convergence and mixing of MCMC chains. In this GitHub repository, you find a count and a control file that should produce output files which trace plots should be similar to the following ones:
+To estimate the population parameters, we need first to check the convergence and mixing of MCMC chains. In this GitHub repository, you find a site-frequency spectrum and a control file that should produce output files which trace plots should be similar to the following ones:
 
 ![](https://github.com/mrborges23/BESS/blob/main/mcmc_plots.png)
 
 These are examples of well converged and mixed chains. To estimate each parameter, the burn-in phase, in which the parameters quickly change their values, should be first removed. Removing the first 10% generations would be enough to eliminate the burn-in phase for these runs, but thei t should be checked for each data set, as it may vary considerably. 
 
+Note: This data comes from a population of 11 Sumatra-Orang-Utans; as they are diploid, 23 the site-frequency has 23 entries. 
 
 ## Compilation errors and how to solve them
 

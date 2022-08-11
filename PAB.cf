@@ -1,0 +1,16 @@
+model S
+site_frequency_spectrum_file PAB.txt
+
+mutation_rate 2.5e-08
+
+population_size_prior_mean 21641
+population_size_prior_variance 721
+
+fitness_coefficient_prior_mean 1
+fitness_coefficient_prior_variance 1000
+
+number_generations 1000000
+number_chains 2
+sample_frequency 100
+
+Lower_bound 10000
